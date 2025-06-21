@@ -1,0 +1,68 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix,accuracy_score,classification_report
+
+
+def load_data(filename):
+    data = np.loadtxt(filename, delimiter=',')
+    X = data[:,:2]
+    y = data[:,2]
+    return X, y
+def plot_data(X, y, pos_label="y=1", neg_label="y=0"):
+    positive = y == 1
+    negative = y == 0
+    
+    # Plot examples
+    plt.plot(X[positive, 0], X[positive, 1], 'k+', label=pos_label)
+    plt.plot(X[negative, 0], X[negative, 1], 'yo', label=neg_label)
+
+#load data 
+x,y = load_data(r"C:\Users\ThinkPad\Downloads\ex2data1.txt")
+
+#plotting data 
+plot_data(x, y, pos_label="Admitted", neg_label="Not admitted")
+plt.show()
+
+
+#preparing training and testing data
+x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.3,random_state=42)
+
+#feature scaling 
+scalar = StandardScaler()
+xtrain_scaled = scalar.fit_transform(x_train)
+xtest_scaled = scalar.transform(x_test)
+
+#train model
+model = LogisticRegression(penalty='l2',C=0.1)
+model.fit(xtrain_scaled,y_train)
+
+#predictions and evaluate 
+ypred = model.predict(xtest_scaled)
+print(ypred)
+print(f"confusion matrix = {confusion_matrix(y_test,ypred)}")
+print(f"classification report = \n{classification_report(y_test,ypred)}")
+print(f"accuracy score {accuracy_score(y_test,ypred):.2f}")
+
+def plot_decision_boundary(model, X, y):
+    x_min, x_max = X[:, 0].min()-1, X[:, 0].max()+1
+    y_min, y_max = X[:, 1].min()-1, X[:, 1].max()+1
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200),
+                         np.linspace(y_min, y_max, 200))
+    
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+
+    plt.contourf(xx, yy, Z, cmap='coolwarm', alpha=0.3)
+    plot_data(X, y)
+    plt.title("Decision Boundary")
+    plt.legend()
+    plt.show()
+
+# Plot decision boundary using scaled data
+plot_decision_boundary(model, xtest_scaled, y_test)
+
+
